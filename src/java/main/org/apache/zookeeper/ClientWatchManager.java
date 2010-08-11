@@ -18,6 +18,7 @@
 
 package org.apache.zookeeper;
 
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -36,4 +37,10 @@ public interface ClientWatchManager {
      * @return
      */
     public Set<Watcher> materialize(Watcher.Event.KeeperState state, Watcher.Event.EventType type, String path);
+    
+    public boolean hasWatches();
+    
+    List<String> getDataWatchesKeys();
+    List<String> getExistWatchesKeys();
+    List<String> getChildWatchesKeys();
 }

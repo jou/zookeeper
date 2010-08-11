@@ -114,7 +114,8 @@ public class ZooKeeper {
 
 
     private final ZKWatchManager watchManager = new ZKWatchManager();
-
+    
+    //deprecated
     List<String> getDataWatches() {
         List<String> rc = new ArrayList<String>(watchManager.dataWatches.keySet());
         return rc;
@@ -149,6 +150,13 @@ public class ZooKeeper {
             if (from != null) {
                 to.addAll(from);
             }
+        }
+        
+        public boolean hasWatches() {
+        	if(!dataWatches.isEmpty()) return true;
+        	if(!existWatches.isEmpty()) return true;
+        	if(!childWatches.isEmpty()) return true;
+        	return false;
         }
 
         /* (non-Javadoc)
@@ -228,6 +236,24 @@ public class ZooKeeper {
 
             return result;
         }
+
+		@Override
+		public List<String> getDataWatchesKeys() {
+			List<String> rc = new ArrayList<String>(dataWatches.keySet());
+	        return rc;
+		}
+
+		@Override
+		public List<String> getExistWatchesKeys() {
+	        List<String> rc =  new ArrayList<String>(existWatches.keySet());
+	        return rc;
+		}
+
+		@Override
+		public List<String> getChildWatchesKeys() {
+	        List<String> rc = new ArrayList<String>(childWatches.keySet());
+	        return rc;
+		}
     }
 
     /**
@@ -374,7 +400,7 @@ public class ZooKeeper {
                 + " sessionTimeout=" + sessionTimeout + " watcher=" + watcher);
 
         watchManager.defaultWatcher = watcher;
-        cnxn = new ClientCnxn(connectString, sessionTimeout, this, watchManager);
+        cnxn = new ClientCnxn(connectString, sessionTimeout, watchManager);
         cnxn.start();
     }
 
@@ -441,7 +467,7 @@ public class ZooKeeper {
                 + (sessionPasswd == null ? "<null>" : "<hidden>"));
 
         watchManager.defaultWatcher = watcher;
-        cnxn = new ClientCnxn(connectString, sessionTimeout, this, watchManager,
+        cnxn = new ClientCnxn(connectString, sessionTimeout, watchManager,
                 sessionId, sessionPasswd);
         cnxn.start();
     }
@@ -921,7 +947,7 @@ public class ZooKeeper {
     public Stat exists(String path, boolean watch) throws KeeperException,
         InterruptedException
     {
-        return exists(path, watch ? watchManager.defaultWatcher : null);
+        return exists(path, watch ? getDefaultWatcher() : null);
     }
 
     /**
@@ -961,7 +987,7 @@ public class ZooKeeper {
      * @see #exists(String, boolean)
      */
     public void exists(String path, boolean watch, StatCallback cb, Object ctx) {
-        exists(path, watch ? watchManager.defaultWatcher : null, cb, ctx);
+        exists(path, watch ? getDefaultWatcher() : null, cb, ctx);
     }
 
     /**
@@ -1034,7 +1060,7 @@ public class ZooKeeper {
      */
     public byte[] getData(String path, boolean watch, Stat stat)
             throws KeeperException, InterruptedException {
-        return getData(path, watch ? watchManager.defaultWatcher : null, stat);
+        return getData(path, watch ? getDefaultWatcher() : null, stat);
     }
 
     /**
@@ -1074,7 +1100,7 @@ public class ZooKeeper {
      * @see #getData(String, boolean, Stat)
      */
     public void getData(String path, boolean watch, DataCallback cb, Object ctx) {
-        getData(path, watch ? watchManager.defaultWatcher : null, cb, ctx);
+        getData(path, watch ? getDefaultWatcher() : null, cb, ctx);
     }
 
     /**
@@ -1355,7 +1381,7 @@ public class ZooKeeper {
      */
     public List<String> getChildren(String path, boolean watch)
             throws KeeperException, InterruptedException {
-        return getChildren(path, watch ? watchManager.defaultWatcher : null);
+        return getChildren(path, watch ? getDefaultWatcher() : null);
     }
 
     /**
@@ -1397,7 +1423,7 @@ public class ZooKeeper {
     public void getChildren(String path, boolean watch, ChildrenCallback cb,
             Object ctx)
     {
-        getChildren(path, watch ? watchManager.defaultWatcher : null, cb, ctx);
+        getChildren(path, watch ? getDefaultWatcher() : null, cb, ctx);
     }
 
     /**
@@ -1482,11 +1508,14 @@ public class ZooKeeper {
      */
     public List<String> getChildren(String path, boolean watch, Stat stat)
             throws KeeperException, InterruptedException {
-        return getChildren(path, watch ? watchManager.defaultWatcher : null,
+        return getChildren(path, watch ? getDefaultWatcher() : null,
                 stat);
     }
 
-    /**
+    private Watcher getDefaultWatcher() {
+		return watchManager.defaultWatcher;
+	}
+	/**
      * The Asynchronous version of getChildren. The request doesn't actually
      * until the asynchronous callback is called.
      *
@@ -1529,7 +1558,7 @@ public class ZooKeeper {
     public void getChildren(String path, boolean watch, Children2Callback cb,
             Object ctx)
     {
-        getChildren(path, watch ? watchManager.defaultWatcher : null, cb, ctx);
+        getChildren(path, watch ? getDefaultWatcher() : null, cb, ctx);
     }
 
     /**

@@ -141,9 +141,7 @@ public class ClientCnxn {
 
     private final int sessionTimeout;
 
-    private final ZooKeeper zooKeeper;
-
-    private final ClientWatchManager watcher;
+    private final ClientWatchManager watchManager;
 
     private long sessionId;
 
@@ -322,11 +320,10 @@ public class ClientCnxn {
      * @param watcher watcher for this connection
      * @throws IOException
      */
-    public ClientCnxn(String hosts, int sessionTimeout, ZooKeeper zooKeeper,
-            ClientWatchManager watcher)
+    public ClientCnxn(String hosts, int sessionTimeout, ClientWatchManager watcher)
         throws IOException
     {
-        this(hosts, sessionTimeout, zooKeeper, watcher, 0, new byte[16]);
+        this(hosts, sessionTimeout, watcher, 0, new byte[16]);
     }
 
     /**
@@ -340,17 +337,15 @@ public class ClientCnxn {
      *                the timeout for connections.
      * @param zooKeeper
      *                the zookeeper object that this connection is related to.
-     * @param watcher watcher for this connection
+     * @param watchManager watcher for this connection
      * @param sessionId session id if re-establishing session
      * @param sessionPasswd session passwd if re-establishing session
      * @throws IOException
      */
-    public ClientCnxn(String hosts, int sessionTimeout, ZooKeeper zooKeeper,
-            ClientWatchManager watcher, long sessionId, byte[] sessionPasswd)
+    public ClientCnxn(String hosts, int sessionTimeout, ClientWatchManager watchManager, long sessionId, byte[] sessionPasswd)
         throws IOException
     {
-        this.zooKeeper = zooKeeper;
-        this.watcher = watcher;
+        this.watchManager = watchManager;
         this.sessionId = sessionId;
         this.sessionPasswd = sessionPasswd;
 
@@ -467,7 +462,7 @@ public class ClientCnxn {
 
             // materialize the watchers based on the event
             WatcherSetEventPair pair = new WatcherSetEventPair(
-                    watcher.materialize(event.getState(), event.getType(),
+                    watchManager.materialize(event.getState(), event.getType(),
                             event.getPath()),
                             event);
             // queue the pair (watch set & event) for later processing
@@ -936,15 +931,12 @@ public class ClientCnxn {
             synchronized (outgoingQueue) {
                 // We add backwards since we are pushing into the front
                 // Only send if there's a pending watch
-                if (!disableAutoWatchReset &&
-                        (!zooKeeper.getDataWatches().isEmpty()
-                         || !zooKeeper.getExistWatches().isEmpty()
-                         || !zooKeeper.getChildWatches().isEmpty()))
+                if (!disableAutoWatchReset && watchManager.hasWatches() )
                 {
                     SetWatches sw = new SetWatches(lastZxid,
-                            zooKeeper.getDataWatches(),
-                            zooKeeper.getExistWatches(),
-                            zooKeeper.getChildWatches());
+                            watchManager.getDataWatchesKeys(),
+                            watchManager.getExistWatchesKeys(),
+                            watchManager.getChildWatchesKeys());
                     RequestHeader h = new RequestHeader();
                     h.setType(ZooDefs.OpCode.setWatches);
                     h.setXid(-8);
