@@ -322,8 +322,6 @@ public class ZooKeeper {
         }
     }
 
-    volatile States state;
-
     protected final ClientCnxn cnxn;
 
     /**
@@ -518,7 +516,7 @@ public class ZooKeeper {
      * @throws InterruptedException
      */
     public synchronized void close() throws InterruptedException {
-        if (!state.isAlive()) {
+        if (!cnxn.getState().isAlive()) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Close called on already closed client");
             }
@@ -1557,7 +1555,7 @@ public class ZooKeeper {
     }
 
     public States getState() {
-        return state;
+        return cnxn.getState();
     }
 
     /**

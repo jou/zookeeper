@@ -78,6 +78,7 @@ import org.apache.zookeeper.server.ZooTrace;
  *
  */
 public class ClientCnxn {
+    private volatile States state;
     private static final Logger LOG = Logger.getLogger(ClientCnxn.class);
 
     /** This controls whether automatic watch resetting is enabled.
@@ -618,7 +619,7 @@ public class ClientCnxn {
         if (p.replyHeader == null) {
             return;
         }
-        switch(zooKeeper.state) {
+        switch(state) {
         case AUTH_FAILED:
             p.replyHeader.setErr(KeeperException.Code.AUTHFAILED.intValue());
             break;
@@ -695,7 +696,7 @@ public class ClientCnxn {
             conRsp.deserialize(bbia, "connect");
             negotiatedSessionTimeout = conRsp.getTimeOut();
             if (negotiatedSessionTimeout <= 0) {
-                zooKeeper.state = States.CLOSED;
+                state = States.CLOSED;
 
                 eventThread.queueEvent(new WatchedEvent(
                         Watcher.Event.EventType.None,
@@ -709,7 +710,7 @@ public class ClientCnxn {
             connectTimeout = negotiatedSessionTimeout / serverAddrs.size();
             sessionId = conRsp.getSessionId();
             sessionPasswd = conRsp.getPasswd();
-            zooKeeper.state = States.CONNECTED;
+            state = States.CONNECTED;
             LOG.info("Session establishment complete on server "
                     + ((SocketChannel)sockKey.channel())
                         .socket().getRemoteSocketAddress()
@@ -911,7 +912,7 @@ public class ClientCnxn {
 
         SendThread() {
             super(makeThreadName("-SendThread()"));
-            zooKeeper.state = States.CONNECTING;
+            state = States.CONNECTING;
             setUncaughtExceptionHandler(uncaughtExceptionHandler);
             setDaemon(true);
         }
@@ -1002,7 +1003,7 @@ public class ClientCnxn {
                     }
                 }
             }
-            zooKeeper.state = States.CONNECTING;
+            state = States.CONNECTING;
             currentConnectIndex = nextAddrToTry;
             InetSocketAddress addr = serverAddrs.get(nextAddrToTry);
             nextAddrToTry++;
@@ -1038,7 +1039,7 @@ public class ClientCnxn {
             long now = System.currentTimeMillis();
             long lastHeard = now;
             long lastSend = now;
-            while (zooKeeper.state.isAlive()) {
+            while (state.isAlive()) {
                 try {
                     if (sockKey == null) {
                         // don't re-establish connection if we are closing
@@ -1052,7 +1053,7 @@ public class ClientCnxn {
                     int idleRecv = (int) (now - lastHeard);
                     int idleSend = (int) (now - lastSend);
                     int to = readTimeout - idleRecv;
-                    if (zooKeeper.state != States.CONNECTED) {
+                    if (state != States.CONNECTED) {
                         to = connectTimeout - idleRecv;
                     }
                     if (to <= 0) {
@@ -1062,7 +1063,7 @@ public class ClientCnxn {
                                 + " for sessionid 0x"
                                 + Long.toHexString(sessionId));
                     }
-                    if (zooKeeper.state == States.CONNECTED) {
+                    if (state == States.CONNECTED) {
                         int timeToNextPing = readTimeout/2 - idleSend;
                         if (timeToNextPing <= 0) {
                             sendPing();
@@ -1103,7 +1104,7 @@ public class ClientCnxn {
                             }
                         }
                     }
-                    if (zooKeeper.state == States.CONNECTED) {
+                    if (state == States.CONNECTED) {
                         if (outgoingQueue.size() > 0) {
                             enableWrite();
                         } else {
@@ -1139,7 +1140,7 @@ public class ClientCnxn {
                                     e);
                         }
                         cleanup();
-                        if (zooKeeper.state.isAlive()) {
+                        if (state.isAlive()) {
                             eventThread.queueEvent(new WatchedEvent(
                                     Event.EventType.None,
                                     Event.KeeperState.Disconnected,
@@ -1158,7 +1159,7 @@ public class ClientCnxn {
             } catch (IOException e) {
                 LOG.warn("Ignoring exception during selector close", e);
             }
-            if (zooKeeper.state.isAlive()) {
+            if (state.isAlive()) {
                 eventThread.queueEvent(new WatchedEvent(
                         Event.EventType.None,
                         Event.KeeperState.Disconnected,
@@ -1224,7 +1225,7 @@ public class ClientCnxn {
         }
 
         public void close() {
-            zooKeeper.state = States.CLOSED;
+            state = States.CLOSED;
             synchronized (this) {
                 selector.wakeup();
             }
@@ -1308,7 +1309,7 @@ public class ClientCnxn {
             packet.ctx = ctx;
             packet.clientPath = clientPath;
             packet.serverPath = serverPath;
-            if (!zooKeeper.state.isAlive()) {
+            if (!state.isAlive()) {
                 conLossPacket(packet);
             } else {
                 outgoingQueue.add(packet);
@@ -1321,7 +1322,7 @@ public class ClientCnxn {
     }
 
     public void addAuthInfo(String scheme, byte auth[]) {
-        if (!zooKeeper.state.isAlive()) {
+        if (!state.isAlive()) {
             return;
         }
         authInfo.add(new AuthData(scheme, auth));
@@ -1329,4 +1330,12 @@ public class ClientCnxn {
                 new AuthPacket(0, scheme, auth), null, null, null, null,
                 null, null);
     }
+
+	public void setState(States state) {
+		this.state = state;
+	}
+
+	public States getState() {
+		return state;
+	}
 }
