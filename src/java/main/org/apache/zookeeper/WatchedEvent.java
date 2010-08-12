@@ -30,7 +30,7 @@ import org.apache.zookeeper.Watcher.Event.KeeperState;
 public class WatchedEvent {
     final private KeeperState keeperState;
     final private EventType eventType;
-    private String path;
+    final private String path;
     
     /**
      * Create a WatchedEvent with specified type, state and path
@@ -38,6 +38,19 @@ public class WatchedEvent {
     public WatchedEvent(EventType eventType, KeeperState keeperState, String path) {
         this.keeperState = keeperState;
         this.eventType = eventType;
+        this.path = path;
+    }
+    
+    /**
+     * Copy ctor to override the path
+     * 
+     * @param we
+     * @param path
+     */
+    public WatchedEvent(WatchedEvent we, String path)
+    {
+        this.keeperState = we.getState();
+        this.eventType = we.getType();
         this.path = path;
     }
     
