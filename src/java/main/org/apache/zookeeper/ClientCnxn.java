@@ -141,7 +141,7 @@ public class ClientCnxn {
 
     private final int sessionTimeout;
 
-    private final ClientWatchManager watchManager;
+    private final ZKWatchManager watchManager;
 
     private long sessionId;
 
@@ -320,7 +320,7 @@ public class ClientCnxn {
      * @param watcher watcher for this connection
      * @throws IOException
      */
-    public ClientCnxn(String hosts, int sessionTimeout, ClientWatchManager watcher)
+    public ClientCnxn(String hosts, int sessionTimeout, ZKWatchManager watcher)
         throws IOException
     {
         this(hosts, sessionTimeout, watcher, 0, new byte[16]);
@@ -342,7 +342,7 @@ public class ClientCnxn {
      * @param sessionPasswd session passwd if re-establishing session
      * @throws IOException
      */
-    public ClientCnxn(String hosts, int sessionTimeout, ClientWatchManager watchManager, long sessionId, byte[] sessionPasswd)
+    public ClientCnxn(String hosts, int sessionTimeout, ZKWatchManager watchManager, long sessionId, byte[] sessionPasswd)
         throws IOException
     {
         this.watchManager = watchManager;
@@ -934,9 +934,9 @@ public class ClientCnxn {
                 if (!disableAutoWatchReset && watchManager.hasWatches() )
                 {
                     SetWatches sw = new SetWatches(lastZxid,
-                            watchManager.getDataWatchesKeys(),
-                            watchManager.getExistWatchesKeys(),
-                            watchManager.getChildWatchesKeys());
+                            watchManager.getWatchesKeys(ZKWatchManager.WATCHTYPE.DATA),
+                            watchManager.getWatchesKeys(ZKWatchManager.WATCHTYPE.EXIST),
+                            watchManager.getWatchesKeys(ZKWatchManager.WATCHTYPE.CHILD));
                     RequestHeader h = new RequestHeader();
                     h.setType(ZooDefs.OpCode.setWatches);
                     h.setXid(-8);
