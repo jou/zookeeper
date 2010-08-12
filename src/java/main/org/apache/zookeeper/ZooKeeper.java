@@ -129,14 +129,14 @@ public class ZooKeeper {
      */
     abstract class WatchRegistration {
         private Watcher watcher;
-        private String clientPath;
+        private String serverPath;
         protected ZKWatchManager watchManager;
         
-        public WatchRegistration(ZKWatchManager watchManager, Watcher watcher, String clientPath)
+        public WatchRegistration(ZKWatchManager watchManager, Watcher watcher, String serverPath)
         {
         	this.watchManager = watchManager;
             this.watcher = watcher;
-            this.clientPath = clientPath;
+            this.serverPath = serverPath;
         }
 
         abstract protected Map<String, Set<Watcher>> getWatches(int rc);
@@ -150,10 +150,10 @@ public class ZooKeeper {
             if (shouldAddWatch(rc)) {
                 Map<String, Set<Watcher>> watches = getWatches(rc);
                 synchronized(watches) {
-                    Set<Watcher> watchers = watches.get(clientPath);
+                    Set<Watcher> watchers = watches.get(serverPath);
                     if (watchers == null) {
                         watchers = new HashSet<Watcher>();
-                        watches.put(clientPath, watchers);
+                        watches.put(serverPath, watchers);
                     }
                     watchers.add(watcher);
                 }
@@ -175,8 +175,8 @@ public class ZooKeeper {
      * even in the case where NONODE result code is returned.
      */
     class ExistsWatchRegistration extends WatchRegistration {
-        public ExistsWatchRegistration(ZKWatchManager watchManager, Watcher watcher, String clientPath) {
-            super(watchManager, watcher, clientPath);
+        public ExistsWatchRegistration(ZKWatchManager watchManager, Watcher watcher, String serverPath) {
+            super(watchManager, watcher, serverPath);
         }
 
         @Override
@@ -191,8 +191,8 @@ public class ZooKeeper {
     }
 
     class DataWatchRegistration extends WatchRegistration {
-        public DataWatchRegistration(ZKWatchManager watchManager, Watcher watcher, String clientPath) {
-            super(watchManager, watcher, clientPath);
+        public DataWatchRegistration(ZKWatchManager watchManager, Watcher watcher, String serverPath) {
+            super(watchManager, watcher, serverPath);
         }
 
         @Override
@@ -202,8 +202,8 @@ public class ZooKeeper {
     }
 
     class ChildWatchRegistration extends WatchRegistration {
-        public ChildWatchRegistration(ZKWatchManager watchManager, Watcher watcher, String clientPath) {
-            super(watchManager, watcher, clientPath);
+        public ChildWatchRegistration(ZKWatchManager watchManager, Watcher watcher, String serverPath) {
+            super(watchManager, watcher, serverPath);
         }
 
         @Override
@@ -771,14 +771,13 @@ public class ZooKeeper {
     {
         final String clientPath = path;
         PathUtils.validatePath(clientPath);
+        final String serverPath = prependChroot(clientPath);
 
         // the watch contains the un-chroot path
         WatchRegistration wcb = null;
         if (watcher != null) {
-            wcb = new ExistsWatchRegistration(watchManager, watcher, clientPath);
+            wcb = new ExistsWatchRegistration(watchManager, watcher, serverPath);
         }
-
-        final String serverPath = prependChroot(clientPath);
 
         RequestHeader h = new RequestHeader();
         h.setType(ZooDefs.OpCode.exists);
@@ -833,14 +832,13 @@ public class ZooKeeper {
     {
         final String clientPath = path;
         PathUtils.validatePath(clientPath);
-
+        final String serverPath = prependChroot(clientPath);
+        
         // the watch contains the un-chroot path
         WatchRegistration wcb = null;
         if (watcher != null) {
-            wcb = new ExistsWatchRegistration(watchManager, watcher, clientPath);
+            wcb = new ExistsWatchRegistration(watchManager, watcher, serverPath);
         }
-
-        final String serverPath = prependChroot(clientPath);
 
         RequestHeader h = new RequestHeader();
         h.setType(ZooDefs.OpCode.exists);
@@ -886,14 +884,13 @@ public class ZooKeeper {
      {
         final String clientPath = path;
         PathUtils.validatePath(clientPath);
-
+        final String serverPath = prependChroot(clientPath);
+        
         // the watch contains the un-chroot path
         WatchRegistration wcb = null;
         if (watcher != null) {
-            wcb = new DataWatchRegistration(watchManager, watcher, clientPath);
+            wcb = new DataWatchRegistration(watchManager, watcher, serverPath);
         }
-
-        final String serverPath = prependChroot(clientPath);
 
         RequestHeader h = new RequestHeader();
         h.setType(ZooDefs.OpCode.getData);
@@ -946,14 +943,13 @@ public class ZooKeeper {
     {
         final String clientPath = path;
         PathUtils.validatePath(clientPath);
-
+        final String serverPath = prependChroot(clientPath);
+        
         // the watch contains the un-chroot path
         WatchRegistration wcb = null;
         if (watcher != null) {
-            wcb = new DataWatchRegistration(watchManager, watcher, clientPath);
+            wcb = new DataWatchRegistration(watchManager, watcher, serverPath);
         }
-
-        final String serverPath = prependChroot(clientPath);
 
         RequestHeader h = new RequestHeader();
         h.setType(ZooDefs.OpCode.getData);
@@ -1208,14 +1204,13 @@ public class ZooKeeper {
     {
         final String clientPath = path;
         PathUtils.validatePath(clientPath);
-
+        final String serverPath = prependChroot(clientPath);
+        
         // the watch contains the un-chroot path
         WatchRegistration wcb = null;
         if (watcher != null) {
-            wcb = new ChildWatchRegistration(watchManager, watcher, clientPath);
+            wcb = new ChildWatchRegistration(watchManager, watcher, serverPath);
         }
-
-        final String serverPath = prependChroot(clientPath);
 
         RequestHeader h = new RequestHeader();
         h.setType(ZooDefs.OpCode.getChildren);
@@ -1267,14 +1262,13 @@ public class ZooKeeper {
     {
         final String clientPath = path;
         PathUtils.validatePath(clientPath);
-
+        final String serverPath = prependChroot(clientPath);
+        
         // the watch contains the un-chroot path
         WatchRegistration wcb = null;
         if (watcher != null) {
-            wcb = new ChildWatchRegistration(watchManager, watcher, clientPath);
+            wcb = new ChildWatchRegistration(watchManager, watcher, serverPath);
         }
-
-        final String serverPath = prependChroot(clientPath);
 
         RequestHeader h = new RequestHeader();
         h.setType(ZooDefs.OpCode.getChildren);
@@ -1328,14 +1322,13 @@ public class ZooKeeper {
     {
         final String clientPath = path;
         PathUtils.validatePath(clientPath);
-
+        final String serverPath = prependChroot(clientPath);
+        
         // the watch contains the un-chroot path
         WatchRegistration wcb = null;
         if (watcher != null) {
-            wcb = new ChildWatchRegistration(watchManager, watcher, clientPath);
+            wcb = new ChildWatchRegistration(watchManager, watcher, serverPath);
         }
-
-        final String serverPath = prependChroot(clientPath);
 
         RequestHeader h = new RequestHeader();
         h.setType(ZooDefs.OpCode.getChildren2);
@@ -1400,14 +1393,13 @@ public class ZooKeeper {
     {
         final String clientPath = path;
         PathUtils.validatePath(clientPath);
-
+        final String serverPath = prependChroot(clientPath);
+        
         // the watch contains the un-chroot path
         WatchRegistration wcb = null;
         if (watcher != null) {
-            wcb = new ChildWatchRegistration(watchManager, watcher, clientPath);
+            wcb = new ChildWatchRegistration(watchManager, watcher, serverPath);
         }
-
-        final String serverPath = prependChroot(clientPath);
 
         RequestHeader h = new RequestHeader();
         h.setType(ZooDefs.OpCode.getChildren2);

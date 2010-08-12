@@ -462,8 +462,7 @@ public class ClientCnxn {
 
             // materialize the watchers based on the event
             WatcherSetEventPair pair = new WatcherSetEventPair(
-                    watchManager.materialize(event.getState(), event.getType(),
-                            event.getPath()),
+                    watchManager.materialize(event),
                             event);
             // queue the pair (watch set & event) for later processing
             waitingEvents.add(pair);
@@ -751,8 +750,16 @@ public class ClientCnxn {
                 }
                 WatcherEvent event = new WatcherEvent();
                 event.deserialize(bbia, "response");
+                WatchedEvent we = new WatchedEvent(event);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Got " + we + " for sessionid 0x"
+                            + Long.toHexString(sessionId));
+                }
+                eventThread.queueEvent( we );
+                return;
 
                 // convert from a server path to a client path
+                // TODO: delete this code
                 if (chrootPath != null) {
                     String serverPath = event.getPath();
                     if(serverPath.compareTo(chrootPath)==0)
@@ -761,14 +768,6 @@ public class ClientCnxn {
                         event.setPath(serverPath.substring(chrootPath.length()));
                 }
 
-                WatchedEvent we = new WatchedEvent(event);
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Got " + we + " for sessionid 0x"
-                            + Long.toHexString(sessionId));
-                }
-
-                eventThread.queueEvent( we );
-                return;
             }
             if (pendingQueue.size() == 0) {
                 throw new IOException("Nothing in the queue, but got "
