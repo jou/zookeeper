@@ -272,7 +272,9 @@ public class ZooKeeper {
                 + " sessionTimeout=" + sessionTimeout + " watcher=" + watcher);
 
         watchManager.setDefaultWatcher(watcher);
-        cnxn = new ClientCnxn(connectString, sessionTimeout, watchManager);
+        
+        ConnectionString parsedConnectionString = new ConnectionString(connectString);
+        cnxn = new ClientCnxn(parsedConnectionString.getHosts(), sessionTimeout, watchManager);
         cnxn.start();
     }
 
@@ -339,7 +341,9 @@ public class ZooKeeper {
                 + (sessionPasswd == null ? "<null>" : "<hidden>"));
 
         watchManager.setDefaultWatcher(watcher);
-        cnxn = new ClientCnxn(connectString, sessionTimeout, watchManager,
+        
+        ConnectionString parsedConnectionString = new ConnectionString(connectString);
+        cnxn = new ClientCnxn(parsedConnectionString.getHosts(), sessionTimeout, watchManager,
                 sessionId, sessionPasswd);
         cnxn.start();
     }
