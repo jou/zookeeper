@@ -66,4 +66,32 @@ public class OperationsTest extends ZKTestCase {
 			
 		}
 	}
+	
+	@Test
+	public void testChrootPathTranslator() {
+		ChrootPathTranslator chroot = new ChrootPathTranslator(new Path("/foo"));
+
+		// Client => Server
+		Path serverPath;
+		serverPath = chroot.toServer("/bar/baz");
+		assertEquals("/foo/bar/baz", serverPath.toString());
+		
+		serverPath = chroot.toServer(new Path("/bar/baz"));
+		assertEquals("/foo/bar/baz", serverPath.toString());
+		
+		// Server => Client
+		Path clientPath;
+		clientPath = chroot.fromServer("/foo/bar/baz");
+		assertEquals("/bar/baz", clientPath.toString());
+		
+		clientPath = chroot.fromServer(new Path("/foo/bar/baz"));
+		assertEquals("/bar/baz", clientPath.toString());
+		
+		try {
+			chroot.fromServer("/kazonk/foo/bar");
+			fail("Expected IllegalArgumentException");
+		} catch (IllegalArgumentException e) {
+			
+		}
+	}
 }
