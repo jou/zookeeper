@@ -311,8 +311,8 @@ public class ClientCnxn {
      * established until needed. The start() instance method must be called
      * subsequent to construction.
      *
-     * @param hosts
-     *                a comma separated list of hosts that can be connected to.
+     * @param hostList
+     *                a list of hosts to connect to.
      * @param sessionTimeout
      *                the timeout for connections.
      * @param zooKeeper
@@ -320,10 +320,10 @@ public class ClientCnxn {
      * @param watcher watcher for this connection
      * @throws IOException
      */
-    public ClientCnxn(String hosts, int sessionTimeout, ZKWatchManager watcher)
+    public ClientCnxn(HostList hostList, int sessionTimeout, ZKWatchManager watcher)
         throws IOException
     {
-        this(hosts, sessionTimeout, watcher, 0, new byte[16]);
+        this(hostList, sessionTimeout, watcher, 0, new byte[16]);
     }
 
     /**
@@ -331,8 +331,8 @@ public class ClientCnxn {
      * established until needed. The start() instance method must be called
      * subsequent to construction.
      *
-     * @param hosts
-     *                a comma separated list of hosts that can be connected to.
+     * @param hostList
+     *                a list of hosts to connect to.
      * @param sessionTimeout
      *                the timeout for connections.
      * @param zooKeeper
@@ -342,53 +342,29 @@ public class ClientCnxn {
      * @param sessionPasswd session passwd if re-establishing session
      * @throws IOException
      */
-    public ClientCnxn(String hosts, int sessionTimeout, ZKWatchManager watchManager, long sessionId, byte[] sessionPasswd)
-        throws IOException
+    public ClientCnxn(HostList hostList, int sessionTimeout, ZKWatchManager watchManager, long sessionId, byte[] sessionPasswd)
+    	throws IOException
     {
         this.watchManager = watchManager;
         this.sessionId = sessionId;
         this.sessionPasswd = sessionPasswd;
-
-        // parse out chroot, if any
-        int off = hosts.indexOf('/');
-        if (off >= 0) {
-            String chrootPath = hosts.substring(off);
-            // ignore "/" chroot spec, same as null
-            if (chrootPath.length() == 1) {
-                this.chrootPath = null;
-            } else {
-                PathUtils.validatePath(chrootPath);
-                this.chrootPath = chrootPath;
-            }
-            hosts = hosts.substring(0,  off);
-        } else {
-            this.chrootPath = null;
-        }
-
-        String hostsList[] = hosts.split(",");
-        for (String host : hostsList) {
-            int port = 2181;
-            int pidx = host.lastIndexOf(':');
-            if (pidx >= 0) {
-                // otherwise : is at the end of the string, ignore
-                if (pidx < host.length() - 1) {
-                    port = Integer.parseInt(host.substring(pidx + 1));
-                }
-                host = host.substring(0, pidx);
-            }
-            InetAddress addrs[] = InetAddress.getAllByName(host);
+        
+        for(Host host : hostList) {
+        	InetAddress addrs[] = InetAddress.getAllByName(host.getHostName());
             for (InetAddress addr : addrs) {
-                serverAddrs.add(new InetSocketAddress(addr, port));
+                serverAddrs.add(new InetSocketAddress(addr, host.getPort()));
             }
         }
+        
+        this.chrootPath = null;
         this.sessionTimeout = sessionTimeout;
-        connectTimeout = sessionTimeout / hostsList.length;
+        connectTimeout = sessionTimeout / hostList.size();
         readTimeout = sessionTimeout * 2 / 3;
         Collections.shuffle(serverAddrs);
         sendThread = new SendThread();
         eventThread = new EventThread();
     }
-
+    
     /**
      * tests use this to check on reset of watches
      * @return if the auto reset of watches are disabled
@@ -756,17 +732,6 @@ public class ClientCnxn {
                             + Long.toHexString(sessionId));
                 }
                 eventThread.queueEvent( we );
-                return;
-
-                // convert from a server path to a client path
-                // TODO: delete this code
-                if (chrootPath != null) {
-                    String serverPath = event.getPath();
-                    if(serverPath.compareTo(chrootPath)==0)
-                        event.setPath("/");
-                    else
-                        event.setPath(serverPath.substring(chrootPath.length()));
-                }
 
             }
             if (pendingQueue.size() == 0) {
