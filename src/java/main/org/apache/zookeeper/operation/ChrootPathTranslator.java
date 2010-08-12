@@ -3,6 +3,10 @@ package org.apache.zookeeper.operation;
 public class ChrootPathTranslator {
 	private Path basePath;
 
+	public ChrootPathTranslator() {
+		this(new Path());
+	}
+
 	public ChrootPathTranslator(Path basePath) {
 		this.basePath = basePath;
 	}
