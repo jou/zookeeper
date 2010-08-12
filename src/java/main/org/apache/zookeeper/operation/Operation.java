@@ -1,11 +1,22 @@
 package org.apache.zookeeper.operation;
 
+import org.apache.jute.Record;
 import org.apache.zookeeper.ClientCnxn;
+import org.apache.zookeeper.KeeperException;
+import org.apache.zookeeper.proto.ReplyHeader;
 
 public abstract class Operation {
   
-  protected abstract Request createRequest( ChrootPathTranslator chroot );
+	public abstract String getPath();
+	
+	public abstract Record createRequest(ChrootPathTranslator chroot);
+	
+	public abstract Record createResponse();
   
-  protected abstract void receiveResponse( ChrootPathTranslator chroot, Response )
+	public abstract void receiveResponse(ChrootPathTranslator chroot, Record response);
   
+	public abstract void checkReplyHeader(ReplyHeader header) throws KeeperException;
+  
+	public abstract int getRequestOpCode();
+   
 }
