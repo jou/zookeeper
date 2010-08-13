@@ -350,7 +350,7 @@ public class ClientCnxn {
         this.sessionPasswd = sessionPasswd;
         
         for(Host host : hostList) {
-        	InetAddress addrs[] = InetAddress.getAllByName(host.getHostName());
+        	InetAddress addrs[] = InetAddress.getAllByName(host.getHost());
             for (InetAddress addr : addrs) {
                 serverAddrs.add(new InetSocketAddress(addr, host.getPort()));
             }

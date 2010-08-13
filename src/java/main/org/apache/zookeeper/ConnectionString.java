@@ -3,10 +3,18 @@ package org.apache.zookeeper;
 import org.apache.zookeeper.operation.ChrootPathTranslator;
 import org.apache.zookeeper.operation.Path;
 
+/**
+ * Parse hosts, ports and chroot out of a connection string.
+ */
 public class ConnectionString {
 	private HostList hosts;
 	private ChrootPathTranslator chroot;
 
+	/**
+	 * Parse out the infos out of a connection string
+	 * 
+	 * @param hosts
+	 */
 	public ConnectionString(String hosts) {
         // parse out chroot, if any
         int off = hosts.indexOf('/');

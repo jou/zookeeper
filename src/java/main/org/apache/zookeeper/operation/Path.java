@@ -107,14 +107,42 @@ public class Path implements Cloneable {
 		this.pathParts = linkedList;
 	}
 	
+	/**
+	 * Append a path to the current path. 
+	 * 
+	 * @param path
+	 * @return
+	 */
 	public Path append(String path) {
 		return append(new Path(path));
 	}
 	
+	/**
+	 * Prepend a path to the current path.
+	 * 
+	 * @param path
+	 * @return
+	 */
 	public Path prepend(String path) {
 		return prepend(new Path(path));
 	}
 	
+	/**
+	 * Remove prepended path
+	 * 
+	 * @param prepend
+	 * @return
+	 */
+	public Path removePrepend(String prepend) {
+		return removePrepend(new Path(prepend));
+	}
+
+	/**
+	 * Append a path to the current path. 
+	 * 
+	 * @param path
+	 * @return
+	 */
 	public Path append(Path path) {	
 		Path clone = new Path(this);
 		Iterator<String> newParts = path.pathParts.iterator();
@@ -126,6 +154,12 @@ public class Path implements Cloneable {
 		return clone;
 	}
 	
+	/**
+	 * Prepend a path to the current path.
+	 * 
+	 * @param path
+	 * @return
+	 */
 	public Path prepend(Path path) {
 		Path clone = new Path(this);
 		Iterator<String> newParts = path.pathParts.descendingIterator();
@@ -137,16 +171,12 @@ public class Path implements Cloneable {
 		return clone;
 	}
 	
-	public Path parent() {
-		Path clone = new Path(this);
-		clone.pathParts.remove(clone.pathParts.size() - 1);
-		return clone;
-	}
-	
-	public Path removePrepend(String prepend) {
-		return removePrepend(new Path(prepend));
-	}
-	
+	/**
+	 * Remove prepended path
+	 * 
+	 * @param prepend
+	 * @return
+	 */
 	public Path removePrepend(Path prepend) {
 		Path clone = new Path(this);
 		
@@ -164,6 +194,17 @@ public class Path implements Cloneable {
 			}
 		}
 		
+		return clone;
+	}
+
+	/**
+	 * Parent path.
+	 * 
+	 * @return
+	 */
+	public Path parent() {
+		Path clone = new Path(this);
+		clone.pathParts.remove(clone.pathParts.size() - 1);
 		return clone;
 	}
 	

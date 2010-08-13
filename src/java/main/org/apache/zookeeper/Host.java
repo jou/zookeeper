@@ -1,5 +1,8 @@
 package org.apache.zookeeper;
 
+/**
+ * This class represents a host with its port to connect to.
+ */
 public class Host {
 	private String host;
 	private int port;
@@ -9,12 +12,12 @@ public class Host {
 		this.port = port;
 	}
 
-	public String getHostName() {
+	public String getHost() {
 		return host;
 	}
 
-	public void setHostName(String hostName) {
-		this.host = hostName;
+	public void setHost(String host) {
+		this.host = host;
 	}
 
 	public int getPort() {
