@@ -3,20 +3,23 @@ package org.apache.zookeeper.operation;
 import java.util.List;
 
 import org.apache.jute.Record;
-import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.ZooDefs;
-import org.apache.zookeeper.common.PathUtils;
 import org.apache.zookeeper.proto.GetChildrenRequest;
 import org.apache.zookeeper.proto.GetChildrenResponse;
-import org.apache.zookeeper.proto.ReplyHeader;
 
 public class GetChildren extends Operation {
 	private Watcher watcher;
+	private boolean watching;
 	private List<String> children;
 	
 	public GetChildren(Path path) {
 		this(path, null);
+	}
+	
+	public GetChildren(Path path, boolean watch) {
+		this(path, null);
+		this.watching = watch;
 	}
 	
 	public GetChildren(Path path, Watcher watcher) {
@@ -26,7 +29,7 @@ public class GetChildren extends Operation {
 	
 	@Override
 	public Record createRequest(ChrootPathTranslator chroot) {
-		final String serverPath = chroot.toServer(clientPath).toString();
+		final String serverPath = chroot.toServer(path).toString();
 	
 		GetChildrenRequest request = new GetChildrenRequest();
 		request.setPath(serverPath);
@@ -49,6 +52,16 @@ public class GetChildren extends Operation {
 	@Override
 	public int getRequestOpCode() {
 		return ZooDefs.OpCode.getChildren;
+	}
+
+	@Override
+	public boolean isWatching() {
+		return watching;
+	}
+
+	@Override
+	public Watcher getWatcher() {
+		return watcher;
 	}
 
 	public List<String> getChildren() {

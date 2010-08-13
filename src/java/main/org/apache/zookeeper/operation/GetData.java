@@ -1,18 +1,25 @@
 package org.apache.zookeeper.operation;
 
 import org.apache.jute.Record;
-import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.ZooDefs;
-import org.apache.zookeeper.common.PathUtils;
 import org.apache.zookeeper.proto.GetDataRequest;
 import org.apache.zookeeper.proto.GetDataResponse;
-import org.apache.zookeeper.proto.ReplyHeader;
 
 public class GetData extends Operation {
 	private Path path;
+	private boolean watching;
 	private Watcher watcher;
 	private byte[] data;
+	
+	public GetData(Path path) {
+		this(path, null);
+	}
+	
+	public GetData(Path path, boolean watch) {
+		this(path, null);
+		this.watching = watch;
+	}
 	
 	public GetData(Path path, Watcher watcher) {
 		super(path);
@@ -45,6 +52,16 @@ public class GetData extends Operation {
 	@Override
 	public int getRequestOpCode() {
 		return ZooDefs.OpCode.getData;
+	}
+
+	@Override
+	public boolean isWatching() {
+		return watching;
+	}
+
+	@Override
+	public Watcher getWatcher() {
+		return watcher;
 	}
 
 	public byte[] getData() {

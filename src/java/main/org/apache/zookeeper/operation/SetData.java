@@ -3,7 +3,6 @@ package org.apache.zookeeper.operation;
 import org.apache.jute.Record;
 import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.ZooDefs;
-import org.apache.zookeeper.common.PathUtils;
 import org.apache.zookeeper.data.Stat;
 import org.apache.zookeeper.proto.SetDataRequest;
 import org.apache.zookeeper.proto.SetDataResponse;
@@ -13,10 +12,10 @@ public class SetData extends Operation {
 	private byte[] data;
 	private Stat stat;
 	
-	public SetData(Path path, int version, byte[] data) {
+	public SetData(Path path, byte[] data, int version) {
 		super(path);
-		this.version = version;
 		this.data = data;
+		this.version = version;
 	}
 
 	@Override
@@ -47,4 +46,17 @@ public class SetData extends Operation {
 		return ZooDefs.OpCode.setData;
 	}
 
+	@Override
+	public boolean isWatching() {
+		return false;
+	}
+
+	@Override
+	public Watcher getWatcher() {
+		return null;
+	}
+
+	public Stat getStat() {
+		return stat;
+	}
 }
