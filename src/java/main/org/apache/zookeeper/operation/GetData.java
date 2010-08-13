@@ -10,32 +10,18 @@ import org.apache.zookeeper.proto.GetDataResponse;
 import org.apache.zookeeper.proto.ReplyHeader;
 
 public class GetData extends Operation {
-	private String path;
+	private Path path;
 	private Watcher watcher;
 	private byte[] data;
 	
-	public GetData(String path, Watcher watcher) {
-		super();
-		this.path = path;
+	public GetData(Path path, Watcher watcher) {
+		super(path);
 		this.watcher = watcher;
 	}
 
 	@Override
-	public String getPath() {
-		return path;
-	}
-
-	@Override
 	public Record createRequest(ChrootPathTranslator chroot) {
-		final String clientPath = path;
-		PathUtils.validatePath(clientPath);
-		final String serverPath;
-		
-		if(clientPath.equals("/")) {
-			serverPath = clientPath;
-		} else {
-			serverPath = chroot.toServer(clientPath).toString();
-		}
+		final String serverPath = chroot.toServer(path).toString();
 		
 		GetDataRequest request = new GetDataRequest();
 		request.setPath(serverPath);
@@ -54,13 +40,6 @@ public class GetData extends Operation {
 		GetDataResponse getDataResponse = (GetDataResponse)response;
 		
 		this.data = getDataResponse.getData();
-	}
-
-	@Override
-	public void checkReplyHeader(ReplyHeader header) throws KeeperException {
-		if(header.getErr() != 0) {
-			throw KeeperException.create(KeeperException.Code.get(header.getErr()), path);
-		}
 	}
 
 	@Override

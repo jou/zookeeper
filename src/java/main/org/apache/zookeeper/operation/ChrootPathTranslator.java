@@ -10,6 +10,10 @@ public class ChrootPathTranslator {
 	public ChrootPathTranslator(Path basePath) {
 		this.basePath = basePath;
 	}
+	
+	public Path getBasePath() {
+		return basePath;
+	}
 
 	public Path toServer(String path) {
 		return toServer(new Path(path));

@@ -12,36 +12,22 @@ import org.apache.zookeeper.proto.GetChildrenResponse;
 import org.apache.zookeeper.proto.ReplyHeader;
 
 public class GetChildren extends Operation {
-	private String path;
 	private Watcher watcher;
 	private List<String> children;
 	
-	public GetChildren(String path) {
+	public GetChildren(Path path) {
 		this(path, null);
 	}
 	
-	public GetChildren(String path, Watcher watcher) {
-		this.path = path;
+	public GetChildren(Path path, Watcher watcher) {
+		super(path);
 		this.watcher = watcher;
 	}
 	
 	@Override
-	public String getPath() {
-		return this.path;
-	}
-
-	@Override
 	public Record createRequest(ChrootPathTranslator chroot) {
-		final String clientPath = path;
-		PathUtils.validatePath(clientPath);
-		final String serverPath;
-		
-		if(clientPath.equals("/")) {
-			serverPath = clientPath;
-		} else {
-			serverPath = chroot.toServer(clientPath).toString();
-		}
-		
+		final String serverPath = chroot.toServer(clientPath).toString();
+	
 		GetChildrenRequest request = new GetChildrenRequest();
 		request.setPath(serverPath);
 		request.setWatch(watcher != null);
@@ -58,13 +44,6 @@ public class GetChildren extends Operation {
 	public void receiveResponse(ChrootPathTranslator chroot, Record response) {
 		GetChildrenResponse getChildrenResponse = (GetChildrenResponse)response;
 		this.children = getChildrenResponse.getChildren();
-	}
-
-	@Override
-	public void checkReplyHeader(ReplyHeader header) throws KeeperException {
-		if(header.getErr() != 0) {
-			throw KeeperException.create(KeeperException.Code.get(header.getErr()), path);
-		}
 	}
 
 	@Override

@@ -215,4 +215,12 @@ public class Path implements Cloneable {
 	public Object clone() {
 		return new Path(this);
 	}
+
+	/**
+	 * A path is equal to something if both string representation are the same.
+	 */
+	@Override
+	public boolean equals(Object s) {
+		return this.toString().equals(s.toString());
+	}
 }
