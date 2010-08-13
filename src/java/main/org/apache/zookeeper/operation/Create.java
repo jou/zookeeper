@@ -1,42 +1,41 @@
 package org.apache.zookeeper.operation;
 
+import java.util.List;
+
 import org.apache.jute.Record;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
+import org.apache.zookeeper.KeeperException.InvalidACLException;
+import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.ZooDefs;
-
-import java.util.List;
-
-import org.apache.zookeeper.common.PathUtils;
 import org.apache.zookeeper.data.ACL;
 import org.apache.zookeeper.proto.CreateRequest;
 import org.apache.zookeeper.proto.CreateResponse;
-
 import org.apache.zookeeper.proto.ReplyHeader;
 
 public class Create extends Operation {
 
-	private String path;
+	private Path path;
 	private byte data[];
 	private List<ACL> acl;
 	private CreateMode createMode;
 	private Path responsePath;
 	
-	public Create(String path, byte[] data, List<ACL> acl, CreateMode createMode) {
+	public Create(Path path, byte[] data, List<ACL> acl, CreateMode createMode) throws InvalidACLException {
 		super();
 		this.path = path;
-		this.data = data;
-		this.acl = acl;
+		this.data = data;	
 		this.createMode = createMode;
 		this.responsePath = null;
+		setAcl(acl);
 	}
 	
 	@Override
-	public String getPath() {
+	public Path getPath() {
 		return path;
 	}
 	
-	public void setPath(String path) {
+	public void setPath(Path path) {
 		this.path = path;
 	}
 	
@@ -52,7 +51,10 @@ public class Create extends Operation {
 		return acl;
 	}
 	
-	public void setAcl(List<ACL> acl) {
+	public void setAcl(List<ACL> acl) throws InvalidACLException {
+		if (acl != null && acl.size() == 0) {
+            throw new KeeperException.InvalidACLException();
+        }
 		this.acl = acl;
 	}
 	
@@ -71,14 +73,13 @@ public class Create extends Operation {
 
 	@Override
 	public Record createRequest(ChrootPathTranslator chroot) {
-		final String clientPath = path;
-		final String serverPath = chroot.toServer(path).toString();
-		
-		PathUtils.validatePath(clientPath, createMode.isSequential());
+
+		Path serverPath = chroot.toServer(path);
 		CreateRequest request = new CreateRequest();
+		
 		request.setData(data);
 		request.setFlags(createMode.toFlag());
-		request.setPath(serverPath);
+		request.setPath(serverPath.toString());
 		request.setAcl(acl);
 		
 		return request;
@@ -98,12 +99,22 @@ public class Create extends Operation {
 	@Override
 	public void checkReplyHeader(ReplyHeader header) throws KeeperException {
 		if(header.getErr() != 0) {
-			throw KeeperException.create(KeeperException.Code.get(header.getErr()), path);
+			throw KeeperException.create(KeeperException.Code.get(header.getErr()), path.toString());
 		}
 	}
 
 	@Override
 	public Record createResponse() {
 		return new CreateResponse();
+	}
+
+	@Override
+	public boolean isWatching() {
+		return false;
+	}
+
+	@Override
+	public Watcher getWatcher() {
+		return null;
 	}
 }
