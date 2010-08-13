@@ -11,28 +11,19 @@ import org.apache.zookeeper.ZooDefs;
 import org.apache.zookeeper.data.ACL;
 import org.apache.zookeeper.proto.CreateRequest;
 import org.apache.zookeeper.proto.CreateResponse;
-import org.apache.zookeeper.proto.ReplyHeader;
 
 public class Create extends Operation {
-
-	private Path path;
 	private byte data[];
 	private List<ACL> acl;
 	private CreateMode createMode;
 	private Path responsePath;
 	
 	public Create(Path path, byte[] data, List<ACL> acl, CreateMode createMode) throws InvalidACLException {
-		super();
-		this.path = path;
+		super(path);
 		this.data = data;	
 		this.createMode = createMode;
 		this.responsePath = null;
 		setAcl(acl);
-	}
-	
-	@Override
-	public Path getPath() {
-		return path;
 	}
 	
 	public void setPath(Path path) {
@@ -70,10 +61,8 @@ public class Create extends Operation {
 		return responsePath;
 	}
 	
-
 	@Override
 	public Record createRequest(ChrootPathTranslator chroot) {
-
 		Path serverPath = chroot.toServer(path);
 		CreateRequest request = new CreateRequest();
 		
@@ -94,13 +83,6 @@ public class Create extends Operation {
 	@Override
 	public int getRequestOpCode() {
 		return ZooDefs.OpCode.create;
-	}
-
-	@Override
-	public void checkReplyHeader(ReplyHeader header) throws KeeperException {
-		if(header.getErr() != 0) {
-			throw KeeperException.create(KeeperException.Code.get(header.getErr()), path.toString());
-		}
 	}
 
 	@Override

@@ -10,9 +10,7 @@ import org.apache.zookeeper.proto.ReplyHeader;
 import org.apache.zookeeper.proto.SetDataResponse;
 
 public class Exists extends Operation {
-	
 	private boolean watching;
-	private Path path;
 	private Watcher watcher;
 	private Stat stat;
 	
@@ -25,8 +23,7 @@ public class Exists extends Operation {
 		this.watching = watch;
 	}
 	public Exists(Path path, Watcher watcher) {
-		super();
-		this.path = path;
+		super(path);
 		this.watcher = watcher;
 		this.path = null;
 	}
@@ -37,11 +34,6 @@ public class Exists extends Operation {
     
 	public Stat getStat() {
 		return stat;
-	}
-    
-	@Override
-	public Path getPath() {
-		return path;
 	}
 
 	@Override
