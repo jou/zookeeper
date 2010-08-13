@@ -732,7 +732,7 @@ public class ClientCnxn {
                             + Long.toHexString(sessionId));
                 }
                 eventThread.queueEvent( we );
-
+                return;
             }
             if (pendingQueue.size() == 0) {
                 throw new IOException("Nothing in the queue, but got "
