@@ -89,14 +89,4 @@ public class Create extends Operation {
 	public Record createResponse() {
 		return new CreateResponse();
 	}
-
-	@Override
-	public boolean isWatching() {
-		return false;
-	}
-
-	@Override
-	public Watcher getWatcher() {
-		return null;
-	}
 }

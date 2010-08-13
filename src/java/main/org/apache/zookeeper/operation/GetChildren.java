@@ -59,7 +59,7 @@ public class GetChildren extends Operation {
 		return children;
 	}
 	
-	// Return a ExistsWatchRegistration object, if there is a order for watching
+	// Return a ChildrenWatchRegistration object, if there is a order for watching
 	@Override
 	private WatchRegistration getWatchRegistration(serverPath) {
 		if(watching) {

@@ -59,7 +59,7 @@ public class GetData extends Operation {
 		return data;
 	}
 	
-	// Return a ExistsWatchRegistration object, if there is a order for watching
+	// Return a DataWatchRegistration object, if there is a order for watching
 	@Override
 	private WatchRegistration getWatchRegistration(serverPath) {
 		if(watching) {
