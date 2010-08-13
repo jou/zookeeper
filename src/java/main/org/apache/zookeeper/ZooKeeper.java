@@ -130,32 +130,30 @@ public class ZooKeeper {
     abstract class WatchRegistration {
         private Watcher watcher;
         private String serverPath;
-        protected ZKWatchManager watchManager;
         
-        public WatchRegistration(ZKWatchManager watchManager, Watcher watcher, String serverPath)
+        public WatchRegistration(Watcher watcher, String serverPath)
         {
-        	this.watchManager = watchManager;
             this.watcher = watcher;
             this.serverPath = serverPath;
         }
 
-        abstract protected Map<String, Set<Watcher>> getWatches(int rc);
+        abstract protected Map<String, Set<Watcher>> getWatches(ZKWatchManager watchManager, int rc);
 
         /**
          * Register the watcher with the set of watches on path.
          * @param rc the result code of the operation that attempted to
          * add the watch on the path.
          */
-        public void register(int rc) {
+        public void register( ZKWatchManager watchManager, int rc) {
             if (shouldAddWatch(rc)) {
-                Map<String, Set<Watcher>> watches = getWatches(rc);
+                Map<String, Set<Watcher>> watches = getWatches( watchManager, rc);
                 synchronized(watches) {
                     Set<Watcher> watchers = watches.get(serverPath);
                     if (watchers == null) {
                         watchers = new HashSet<Watcher>();
                         watches.put(serverPath, watchers);
                     }
-                    watchers.add(watcher);
+                    watchers.add(watcher != null ? watcher : watchManager.getDefaultWatcher());
                 }
             }
         }
@@ -175,13 +173,13 @@ public class ZooKeeper {
      * even in the case where NONODE result code is returned.
      */
     class ExistsWatchRegistration extends WatchRegistration {
-        public ExistsWatchRegistration(ZKWatchManager watchManager, Watcher watcher, String serverPath) {
-            super(watchManager, watcher, serverPath);
+        public ExistsWatchRegistration(Watcher watcher, String serverPath) {
+            super(watcher, serverPath);
         }
 
         @Override
-        protected Map<String, Set<Watcher>> getWatches(int rc) {
-            return rc == 0 ?  this.watchManager.getWatches(ZKWatchManager.WATCHTYPE.DATA) : this.watchManager.getWatches(ZKWatchManager.WATCHTYPE.EXIST);
+        protected Map<String, Set<Watcher>> getWatches(ZKWatchManager watchManager, int rc) {
+            return rc == 0 ?  watchManager.getWatches(ZKWatchManager.WATCHTYPE.DATA) : watchManager.getWatches(ZKWatchManager.WATCHTYPE.EXIST);
         }
 
         @Override
@@ -191,24 +189,24 @@ public class ZooKeeper {
     }
 
     class DataWatchRegistration extends WatchRegistration {
-        public DataWatchRegistration(ZKWatchManager watchManager, Watcher watcher, String serverPath) {
-            super(watchManager, watcher, serverPath);
+        public DataWatchRegistration(Watcher watcher, String serverPath) {
+            super(watcher, serverPath);
         }
 
         @Override
-        protected Map<String, Set<Watcher>> getWatches(int rc) {
-            return this.watchManager.getWatches(ZKWatchManager.WATCHTYPE.DATA);
+        protected Map<String, Set<Watcher>> getWatches(ZKWatchManager watchManager, int rc) {
+            return watchManager.getWatches(ZKWatchManager.WATCHTYPE.DATA);
         }
     }
 
     class ChildWatchRegistration extends WatchRegistration {
         public ChildWatchRegistration(ZKWatchManager watchManager, Watcher watcher, String serverPath) {
-            super(watchManager, watcher, serverPath);
+            super(watcher, serverPath);
         }
 
         @Override
-        protected Map<String, Set<Watcher>> getWatches(int rc) {
-            return this.watchManager.getWatches(ZKWatchManager.WATCHTYPE.CHILD);
+        protected Map<String, Set<Watcher>> getWatches(ZKWatchManager watchManager, int rc) {
+            return watchManager.getWatches(ZKWatchManager.WATCHTYPE.CHILD);
         }
     }
 
@@ -780,7 +778,7 @@ public class ZooKeeper {
         // the watch contains the un-chroot path
         WatchRegistration wcb = null;
         if (watcher != null) {
-            wcb = new ExistsWatchRegistration(watchManager, watcher, serverPath);
+            wcb = new ExistsWatchRegistration(watcher, serverPath);
         }
 
         RequestHeader h = new RequestHeader();
@@ -841,7 +839,7 @@ public class ZooKeeper {
         // the watch contains the un-chroot path
         WatchRegistration wcb = null;
         if (watcher != null) {
-            wcb = new ExistsWatchRegistration(watchManager, watcher, serverPath);
+            wcb = new ExistsWatchRegistration(watcher, serverPath);
         }
 
         RequestHeader h = new RequestHeader();
@@ -893,7 +891,7 @@ public class ZooKeeper {
         // the watch contains the un-chroot path
         WatchRegistration wcb = null;
         if (watcher != null) {
-            wcb = new DataWatchRegistration(watchManager, watcher, serverPath);
+            wcb = new DataWatchRegistration(watcher, serverPath);
         }
 
         RequestHeader h = new RequestHeader();
@@ -952,7 +950,7 @@ public class ZooKeeper {
         // the watch contains the un-chroot path
         WatchRegistration wcb = null;
         if (watcher != null) {
-            wcb = new DataWatchRegistration(watchManager, watcher, serverPath);
+            wcb = new DataWatchRegistration(watcher, serverPath);
         }
 
         RequestHeader h = new RequestHeader();
