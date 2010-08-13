@@ -571,7 +571,7 @@ public class ClientCnxn {
 
     private void finishPacket(Packet p) {
         if (p.watchRegistration != null) {
-            p.watchRegistration.register(p.replyHeader.getErr());
+            p.watchRegistration.register(watchManager, p.replyHeader.getErr());
         }
 
         if (p.cb == null) {
