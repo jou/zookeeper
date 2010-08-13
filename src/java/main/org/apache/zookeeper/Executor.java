@@ -30,10 +30,11 @@ public class Executor {
 	// function for synchron operation
 	public void execute(Operation op) throws InterruptedException, KeeperException {
 		String clientPath = op.getPath().toString();
+		String serverPath = chroot.toServer(clientPath).toString();
 		Record response = op.createResponse();
     	Record request = op.createRequest(chroot);
 		RequestHeader header = new RequestHeader();
-		WatchRegistration watchRegistration = getWatchRegistration(op,clientPath);
+		WatchRegistration watchRegistration = op.getWatchRegistration(serverPath);
 
 		header.setType(op.getRequestOpCode());
 		ReplyHeader reply = connection.submitRequest(header, request , response, watchRegistration);
@@ -49,17 +50,9 @@ public class Executor {
 		ReplyHeader reply = new ReplyHeader();
 		String clientPath = op.getPath().toString();
 		String serverPath = chroot.toServer(clientPath).toString();
-		WatchRegistration watchRegistration = getWatchRegistration(op, clientPath);
+		WatchRegistration watchRegistration = op.getWatchRegistration(serverPath);
 	
 		header.setType(op.getRequestOpCode()); 
 		connection.queuePacket(header, reply, request, response, cb, clientPath, serverPath, context, watchRegistration);
-	}
-    
-	// Return a ExistsWatchRegistration object, if there is a order for watching
-	private ExistsWatchRegistration getWatchRegistration(Operation op, String clientPath) {
-		if(op.isWatching()) {
-			return new ExistsWatchRegistration(op.getWatcher(), chroot.toServer(clientPath));
-		}
-		return null;	
 	}
 }

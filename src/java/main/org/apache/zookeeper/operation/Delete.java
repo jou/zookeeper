@@ -1,7 +1,6 @@
 package org.apache.zookeeper.operation;
 
 import org.apache.jute.Record;
-import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.ZooDefs;
 import org.apache.zookeeper.proto.DeleteRequest;
 
@@ -50,15 +49,4 @@ public class Delete extends Operation {
 	public Record createResponse() {
 		return null;
 	}
-
-	@Override
-	public boolean isWatching() {
-		return false;
-	}
-
-	@Override
-	public Watcher getWatcher() {
-		return null;
-	}
-
 }

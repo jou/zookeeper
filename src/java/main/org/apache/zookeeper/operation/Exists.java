@@ -10,26 +10,22 @@ import org.apache.zookeeper.proto.ReplyHeader;
 import org.apache.zookeeper.proto.SetDataResponse;
 
 public class Exists extends Operation {
-	private boolean watching;
-	private Watcher watcher;
+	private boolean watching = false;
+	private Watcher watcher = null;
 	private Stat stat;
 	
 	public Exists(Path path) {
-		this(path,null);
+		super(path);
 	}
 	
 	public Exists(Path path, boolean watch) {
-		this(path,null);
+		this(path);
 		this.watching = watch;
 	}
 	public Exists(Path path, Watcher watcher) {
-		super(path);
+		this(path);
 		this.watcher = watcher;
-		this.path = null;
-	}
-	
-    public boolean isWatching() {
-		return watching;
+		this.watching = true;
 	}
     
 	public Stat getStat() {
@@ -76,9 +72,13 @@ public class Exists extends Operation {
 	public int getRequestOpCode() {
 		return ZooDefs.OpCode.exists;
 	}
-
+	
+	// Return a ExistsWatchRegistration object, if there is a order for watching
 	@Override
-	public Watcher getWatcher() {
-		return watcher;
+	private ExistsWatchRegistration getWatchRegistration(serverPath) {
+		if(watching) {
+			return new ExistsWatchRegistration(watcher, serverPath);
+		}
+		return null;	
 	}
 }

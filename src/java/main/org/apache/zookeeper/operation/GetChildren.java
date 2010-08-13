@@ -9,22 +9,23 @@ import org.apache.zookeeper.proto.GetChildrenRequest;
 import org.apache.zookeeper.proto.GetChildrenResponse;
 
 public class GetChildren extends Operation {
-	private Watcher watcher;
-	private boolean watching;
+	private Watcher watcher = null;
+	private boolean watching = false;
 	private List<String> children;
 	
 	public GetChildren(Path path) {
-		this(path, null);
+		super(path);
 	}
 	
 	public GetChildren(Path path, boolean watch) {
-		this(path, null);
+		this(path);
 		this.watching = watch;
 	}
 	
 	public GetChildren(Path path, Watcher watcher) {
-		super(path);
+		this(path);
 		this.watcher = watcher;
+		this.watching = true;
 	}
 	
 	@Override
@@ -54,17 +55,16 @@ public class GetChildren extends Operation {
 		return ZooDefs.OpCode.getChildren;
 	}
 
-	@Override
-	public boolean isWatching() {
-		return watching;
-	}
-
-	@Override
-	public Watcher getWatcher() {
-		return watcher;
-	}
-
 	public List<String> getChildren() {
 		return children;
+	}
+	
+	// Return a ExistsWatchRegistration object, if there is a order for watching
+	@Override
+	private WatchRegistration getWatchRegistration(serverPath) {
+		if(watching) {
+			return new ChildrenWatchRegistration(watcher, serverPath);
+		}
+		return null;	
 	}
 }

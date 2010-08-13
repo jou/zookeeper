@@ -8,22 +8,23 @@ import org.apache.zookeeper.proto.GetDataResponse;
 
 public class GetData extends Operation {
 	private Path path;
-	private boolean watching;
-	private Watcher watcher;
+	private boolean watching = false;
+	private Watcher watcher = null;
 	private byte[] data;
 	
 	public GetData(Path path) {
-		this(path, null);
+		super(path);
 	}
 	
 	public GetData(Path path, boolean watch) {
-		this(path, null);
+		this(path);
 		this.watching = watch;
 	}
 	
 	public GetData(Path path, Watcher watcher) {
-		super(path);
+		this(path);
 		this.watcher = watcher;
+		this.watching = true;
 	}
 
 	@Override
@@ -54,17 +55,16 @@ public class GetData extends Operation {
 		return ZooDefs.OpCode.getData;
 	}
 
-	@Override
-	public boolean isWatching() {
-		return watching;
-	}
-
-	@Override
-	public Watcher getWatcher() {
-		return watcher;
-	}
-
 	public byte[] getData() {
 		return data;
+	}
+	
+	// Return a ExistsWatchRegistration object, if there is a order for watching
+	@Override
+	private WatchRegistration getWatchRegistration(serverPath) {
+		if(watching) {
+			return new DataWatchRegistration(watcher, serverPath);
+		}
+		return null;	
 	}
 }

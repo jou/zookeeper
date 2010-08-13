@@ -24,9 +24,9 @@ public abstract class Operation {
   
 	public abstract int getRequestOpCode();
 	
-	public abstract boolean isWatching();
-	
-	public abstract Watcher getWatcher();
+    public WatchRegistration getWatchRegistration(String serverPath) {
+   	    return null;
+    }
 
 	public void checkReplyHeader(ReplyHeader header) throws KeeperException {
 		if(header.getErr() != 0) {
