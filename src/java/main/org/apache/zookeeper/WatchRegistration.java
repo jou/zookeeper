@@ -7,7 +7,52 @@ import java.util.Set;
 /**
  * Register a watcher for a particular path.
  */
-abstract class WatchRegistration {
+public abstract class WatchRegistration {
+	/** 
+	 * Handle the special case of exists watches - they add a watcher
+	 * even in the case where NONODE result code is returned.
+	 */
+	public static class Exists extends WatchRegistration {
+	    public Exists(Watcher watcher, String serverPath) {
+	        super(watcher, serverPath);
+	    }
+
+	    @Override
+	    protected Map<String, Set<Watcher>> getWatches(ZKWatchManager watchManager, int rc) {
+	        return rc == 0 ?  watchManager.getWatches(ZKWatchManager.WATCHTYPE.DATA) : watchManager.getWatches(ZKWatchManager.WATCHTYPE.EXIST);
+	    }
+
+	    @Override
+	    protected boolean shouldAddWatch(int rc) {
+	        return rc == 0 || rc == KeeperException.Code.NONODE.intValue();
+	    }
+	}
+
+	public static class Data extends WatchRegistration {
+	    public Data(Watcher watcher, String serverPath) {
+	        super(watcher, serverPath);
+	    }
+
+	    @Override
+	    protected Map<String, Set<Watcher>> getWatches(ZKWatchManager watchManager, int rc) {
+	        return watchManager.getWatches(ZKWatchManager.WATCHTYPE.DATA);
+	    }
+	}
+
+	public static class Child extends WatchRegistration {
+	    public Child(Watcher watcher, String serverPath) {
+	        super(watcher, serverPath);
+	    }
+
+	    @Override
+	    protected Map<String, Set<Watcher>> getWatches(ZKWatchManager watchManager, int rc) {
+	        return watchManager.getWatches(ZKWatchManager.WATCHTYPE.CHILD);
+	    }
+	}
+	
+	
+	
+	
     private Watcher watcher;
     private String serverPath;
     
@@ -46,47 +91,5 @@ abstract class WatchRegistration {
      */
     protected boolean shouldAddWatch(int rc) {
         return rc == 0;
-    }
-}
-
-/** 
- * Handle the special case of exists watches - they add a watcher
- * even in the case where NONODE result code is returned.
- */
-class ExistsWatchRegistration extends WatchRegistration {
-    public ExistsWatchRegistration(Watcher watcher, String serverPath) {
-        super(watcher, serverPath);
-    }
-
-    @Override
-    protected Map<String, Set<Watcher>> getWatches(ZKWatchManager watchManager, int rc) {
-        return rc == 0 ?  watchManager.getWatches(ZKWatchManager.WATCHTYPE.DATA) : watchManager.getWatches(ZKWatchManager.WATCHTYPE.EXIST);
-    }
-
-    @Override
-    protected boolean shouldAddWatch(int rc) {
-        return rc == 0 || rc == KeeperException.Code.NONODE.intValue();
-    }
-}
-
-class DataWatchRegistration extends WatchRegistration {
-    public DataWatchRegistration(Watcher watcher, String serverPath) {
-        super(watcher, serverPath);
-    }
-
-    @Override
-    protected Map<String, Set<Watcher>> getWatches(ZKWatchManager watchManager, int rc) {
-        return watchManager.getWatches(ZKWatchManager.WATCHTYPE.DATA);
-    }
-}
-
-class ChildWatchRegistration extends WatchRegistration {
-    public ChildWatchRegistration(ZKWatchManager watchManager, Watcher watcher, String serverPath) {
-        super(watcher, serverPath);
-    }
-
-    @Override
-    protected Map<String, Set<Watcher>> getWatches(ZKWatchManager watchManager, int rc) {
-        return watchManager.getWatches(ZKWatchManager.WATCHTYPE.CHILD);
     }
 }

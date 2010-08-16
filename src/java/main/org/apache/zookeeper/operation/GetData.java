@@ -1,8 +1,10 @@
 package org.apache.zookeeper.operation;
 
 import org.apache.jute.Record;
+import org.apache.zookeeper.WatchRegistration;
 import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.ZooDefs;
+import org.apache.zookeeper.data.Stat;
 import org.apache.zookeeper.proto.GetDataRequest;
 import org.apache.zookeeper.proto.GetDataResponse;
 
@@ -11,6 +13,7 @@ public class GetData extends Operation {
 	private boolean watching = false;
 	private Watcher watcher = null;
 	private byte[] data;
+	private Stat stat;
 	
 	public GetData(Path path) {
 		super(path);
@@ -61,10 +64,14 @@ public class GetData extends Operation {
 	
 	// Return a DataWatchRegistration object, if there is a order for watching
 	@Override
-	private WatchRegistration getWatchRegistration(serverPath) {
+	public WatchRegistration.Data getWatchRegistration(String serverPath) {
 		if(watching) {
-			return new DataWatchRegistration(watcher, serverPath);
+			return new WatchRegistration.Data(watcher, serverPath);
 		}
 		return null;	
+	}
+
+	public Stat getStat() {
+		return stat;
 	}
 }

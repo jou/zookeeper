@@ -1,8 +1,7 @@
 package org.apache.zookeeper;
 
 import org.apache.jute.Record;
-import org.apache.zookeeper.ZooKeeper.ExistsWatchRegistration;
-import org.apache.zookeeper.ZooKeeper.WatchRegistration;
+import org.apache.zookeeper.WatchRegistration;
 import org.apache.zookeeper.operation.ChrootPathTranslator;
 import org.apache.zookeeper.operation.Operation;
 import org.apache.zookeeper.operation.Path;
@@ -53,6 +52,6 @@ public class Executor {
 		WatchRegistration watchRegistration = op.getWatchRegistration(serverPath);
 	
 		header.setType(op.getRequestOpCode()); 
-		connection.queuePacket(header, reply, request, response, cb, clientPath, serverPath, context, watchRegistration);
+		connection.queuePacket(header, reply, request, response, cb, clientPath, chroot, context, watchRegistration);
 	}
 }

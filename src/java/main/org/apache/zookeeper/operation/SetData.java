@@ -1,7 +1,6 @@
 package org.apache.zookeeper.operation;
 
 import org.apache.jute.Record;
-import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.ZooDefs;
 import org.apache.zookeeper.data.Stat;
 import org.apache.zookeeper.proto.SetDataRequest;
@@ -44,16 +43,6 @@ public class SetData extends Operation {
 	@Override
 	public int getRequestOpCode() {
 		return ZooDefs.OpCode.setData;
-	}
-
-	@Override
-	public boolean isWatching() {
-		return false;
-	}
-
-	@Override
-	public Watcher getWatcher() {
-		return null;
 	}
 
 	public Stat getStat() {

@@ -2,7 +2,7 @@ package org.apache.zookeeper.operation;
 
 import org.apache.jute.Record;
 import org.apache.zookeeper.KeeperException;
-import org.apache.zookeeper.Watcher;
+import org.apache.zookeeper.WatchRegistration;
 import org.apache.zookeeper.proto.ReplyHeader;
 
 public abstract class Operation {

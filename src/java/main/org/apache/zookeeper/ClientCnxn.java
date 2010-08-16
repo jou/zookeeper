@@ -51,8 +51,8 @@ import org.apache.zookeeper.Watcher.Event.EventType;
 import org.apache.zookeeper.Watcher.Event.KeeperState;
 import org.apache.zookeeper.ZooDefs.OpCode;
 import org.apache.zookeeper.ZooKeeper.States;
-import org.apache.zookeeper.ZooKeeper.WatchRegistration;
-import org.apache.zookeeper.common.PathUtils;
+import org.apache.zookeeper.WatchRegistration;
+import org.apache.zookeeper.operation.ChrootPathTranslator;
 import org.apache.zookeeper.proto.AuthPacket;
 import org.apache.zookeeper.proto.ConnectRequest;
 import org.apache.zookeeper.proto.ConnectResponse;
@@ -147,8 +147,6 @@ public class ClientCnxn {
 
     private byte sessionPasswd[] = new byte[16];
 
-    final String chrootPath;
-
     final SendThread sendThread;
 
     final EventThread eventThread;
@@ -240,8 +238,8 @@ public class ClientCnxn {
 
         /** Client's view of the path (may differ due to chroot) **/
         String clientPath;
-        /** Servers's view of the path (may differ due to chroot) **/
-        String serverPath;
+
+        ChrootPathTranslator chrootPathTranslator;
 
         ReplyHeader replyHeader;
 
@@ -292,7 +290,7 @@ public class ClientCnxn {
             StringBuilder sb = new StringBuilder();
 
             sb.append("clientPath:" + clientPath);
-            sb.append(" serverPath:" + serverPath);
+            sb.append(" serverPath:" + chrootPathTranslator.toServer(clientPath));
             sb.append(" finished:" + finished);
 
             sb.append(" header:: " + header);
@@ -356,7 +354,6 @@ public class ClientCnxn {
             }
         }
         
-        this.chrootPath = null;
         this.sessionTimeout = sessionTimeout;
         connectTimeout = sessionTimeout / hostList.size();
         readTimeout = sessionTimeout * 2 / 3;
@@ -545,10 +542,10 @@ public class ClientCnxn {
                                 CreateResponse rsp = (CreateResponse) p.response;
                                 if (rc == 0) {
                                     cb.processResult(rc, clientPath, p.ctx,
-                                            (chrootPath == null
+                                            (p.chrootPathTranslator == null
                                                     ? rsp.getPath()
-                                                    : rsp.getPath()
-                                              .substring(chrootPath.length())));
+                                                    : p.chrootPathTranslator.fromServer(rsp.getPath()).toString()
+                                              ));
                                 } else {
                                     cb.processResult(rc, clientPath, p.ctx, null);
                                 }
@@ -1252,7 +1249,7 @@ public class ClientCnxn {
 
     Packet queuePacket(RequestHeader h, ReplyHeader r, Record request,
             Record response, AsyncCallback cb, String clientPath,
-            String serverPath, Object ctx, WatchRegistration watchRegistration)
+            ChrootPathTranslator chrootPathTranslator, Object ctx, WatchRegistration watchRegistration)
     {
         Packet packet = null;
         synchronized (outgoingQueue) {
@@ -1264,7 +1261,7 @@ public class ClientCnxn {
             packet.cb = cb;
             packet.ctx = ctx;
             packet.clientPath = clientPath;
-            packet.serverPath = serverPath;
+            packet.chrootPathTranslator = chrootPathTranslator;
             if (!state.isAlive()) {
                 conLossPacket(packet);
             } else {

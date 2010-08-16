@@ -3,6 +3,7 @@ package org.apache.zookeeper.operation;
 import java.util.List;
 
 import org.apache.jute.Record;
+import org.apache.zookeeper.WatchRegistration;
 import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.ZooDefs;
 import org.apache.zookeeper.proto.GetChildrenRequest;
@@ -61,9 +62,9 @@ public class GetChildren extends Operation {
 	
 	// Return a ChildrenWatchRegistration object, if there is a order for watching
 	@Override
-	private WatchRegistration getWatchRegistration(serverPath) {
+	public WatchRegistration.Child getWatchRegistration(String serverPath) {
 		if(watching) {
-			return new ChildrenWatchRegistration(watcher, serverPath);
+			return new WatchRegistration.Child(watcher, serverPath);
 		}
 		return null;	
 	}
