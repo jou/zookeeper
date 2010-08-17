@@ -16,6 +16,8 @@ public class ConnectionString {
 	 * @param hosts
 	 */
 	public ConnectionString(String hosts) {
+		this.hosts = new HostList();
+		
         // parse out chroot, if any
         int off = hosts.indexOf('/');
         if (off >= 0) {
